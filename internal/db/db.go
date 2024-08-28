@@ -44,16 +44,28 @@ func (d *Database) FindUserByID(id uuid.UUID) (types.User, error) {
 	return user, nil
 }
 
-func (d *Database) DeleteUser(id uuid.UUID) {
+func (d *Database) DeleteUser(id uuid.UUID) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+
+	if _, ok := d.Db[id]; !ok {
+		return errors.New("user with given id not found")
+	}
 
 	delete(d.Db, id)
+
+	return nil
 }
 
-func (d *Database) UpdateUser(id uuid.UUID, user types.User) {
+func (d *Database) UpdateUser(id uuid.UUID, user types.User) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
+	if _, ok := d.Db[id]; !ok {
+		return errors.New("user with given id not found")
+	}
+
 	d.Db[id] = user
+
+	return nil
 }

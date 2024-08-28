@@ -33,7 +33,13 @@ func handleFindAll(db db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		users := db.FindAllUsers()
 
-		data, _ := json.Marshal(users)
+		usersDTO := utils.ToUserOutputDTOList(users)
+
+		data, err := json.Marshal(usersDTO)
+		if err != nil {
+			// TODO
+			return
+		}
 
 		w.Write(data)
 	}
@@ -41,7 +47,7 @@ func handleFindAll(db db.Database) http.HandlerFunc {
 
 func handleInsert(db db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var body utils.UserDTO
+		var body utils.UserInputDTO
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			// TODO
 			return
@@ -62,6 +68,9 @@ func handleInsert(db db.Database) http.HandlerFunc {
 
 		db.InsertUser(id, user)
 
+		fmt.Println(user)
+
+		// TODO
 		w.WriteHeader(http.StatusCreated)
 	}
 
@@ -69,15 +78,64 @@ func handleInsert(db db.Database) http.HandlerFunc {
 
 func handleFindByID(db db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := utils.CheckUUID(r, "id")
+		if err != nil {
+			// TODO
+			return
+		}
+
+		user, err := db.FindUserByID(id)
+		if err != nil {
+			// TODO
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		fmt.Println(user)
 	}
 }
 
 func handleDelete(db db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := utils.CheckUUID(r, "id")
+		if err != nil {
+			// TODO
+			return
+		}
+
+		err = db.DeleteUser(id)
+		if err != nil {
+			// TODO
+			return
+		}
 	}
 }
 
 func handleUpdate(db db.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := utils.CheckUUID(r, "id")
+		if err != nil {
+			// TODO
+			return
+		}
+
+		var body utils.UserInputDTO
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			// TODO
+			return
+		}
+
+		user, err := types.NewUser(id, body.FirstName, body.LastName, body.Biography)
+		if err != nil {
+			// TODO
+			fmt.Println(err)
+			return
+		}
+
+		err = db.UpdateUser(id, user)
+		if err != nil {
+			// TODO
+			return
+		}
 	}
 }
