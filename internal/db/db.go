@@ -38,7 +38,7 @@ func (d *Database) FindAllUsers() []types.User {
 func (d *Database) FindUserByID(id uuid.UUID) (types.User, error) {
 	user, ok := d.Db[id]
 	if !ok {
-		return types.User{}, errors.New("user with given id not found")
+		return types.User{}, errors.New("the user with the specified ID does not exist")
 	}
 
 	return user, nil
@@ -49,7 +49,7 @@ func (d *Database) DeleteUser(id uuid.UUID) error {
 	defer d.mu.Unlock()
 
 	if _, ok := d.Db[id]; !ok {
-		return errors.New("user with given id not found")
+		return errors.New("the user with the specified ID does not exist")
 	}
 
 	delete(d.Db, id)
