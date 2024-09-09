@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -67,7 +68,7 @@ func checkUUID(r *http.Request, id string) (uuid.UUID, error) {
 	idStr := chi.URLParam(r, id)
 	uid, err := uuid.Parse(idStr)
 	if err != nil {
-		return uuid.Nil, errors.New("invalid UUID")
+		return uuid.Nil, fmt.Errorf("invalid UUID for parameter '%s': %s", id, idStr)
 	}
 	return uid, nil
 }

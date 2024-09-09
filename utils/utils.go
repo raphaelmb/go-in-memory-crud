@@ -4,6 +4,6 @@ import (
 	"strings"
 )
 
-func CleanErrors(s string) string {
+func FormatErrors(s string) string {
 	return strings.ReplaceAll(s, "\n", ", ")
 }

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/raphaelmb/go-in-memory-crud/api"
-	"github.com/raphaelmb/go-in-memory-crud/internal/db"
+	"github.com/raphaelmb/go-in-memory-crud/internal/database"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 }
 
 func run() error {
-	db := db.NewDB()
+	db := database.NewDB()
 	handler := api.NewHandler(db)
 
 	s := http.Server{

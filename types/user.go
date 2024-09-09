@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -14,20 +15,50 @@ type User struct {
 }
 
 func NewUser(id uuid.UUID, firstName, lastName, bio string) (User, error) {
-	var errs []error
-	if len(firstName) <= 2 || len(firstName) >= 20 {
-		errs = append(errs, errors.New("first name length should be greater than 2 and less than 20 characters"))
+	user := User{ID: id, FirstName: firstName, LastName: lastName, Biography: bio}
+	if err := validateUser(user); err != nil {
+		return User{}, err
 	}
-	if len(lastName) <= 2 || len(lastName) >= 20 {
-		errs = append(errs, errors.New("last name length should be greater than 2 and less than 20 characters"))
+	return user, nil
+}
+
+func validateUser(user User) error {
+	var (
+		errs        []error
+		minNameChar = 2
+		maxNameChar = 20
+		minBioChar  = 20
+		maxBioChar  = 450
+	)
+
+	if err := validateName(user.FirstName, "first name", minNameChar, maxNameChar); err != nil {
+		errs = append(errs, err)
 	}
-	if len(bio) <= 20 || len(bio) >= 450 {
-		errs = append(errs, errors.New("biography length should be greater than 20 and less than 450 characters"))
+	if err := validateName(user.LastName, "last name", minNameChar, maxNameChar); err != nil {
+		errs = append(errs, err)
+	}
+	if err := validateBio(user.Biography, minBioChar, maxBioChar); err != nil {
+		errs = append(errs, err)
 	}
 
-	if errs != nil {
-		return User{}, errors.Join(errs...)
+	if len(errs) > 0 {
+		return errors.Join(errs...)
 	}
 
-	return User{ID: id, FirstName: firstName, LastName: lastName, Biography: bio}, nil
+	return nil
+
+}
+
+func validateName(name, fieldName string, minLen, maxLen int) error {
+	if len(name) < minLen || len(name) > maxLen {
+		return fmt.Errorf("%s length should be greater than %d and less than %d characters", fieldName, minLen, maxLen)
+	}
+	return nil
+}
+
+func validateBio(bio string, minLen, maxLen int) error {
+	if len(bio) < minLen || len(bio) > maxLen {
+		return fmt.Errorf("biography length should be greater than %d and less than %d characters", minLen, maxLen)
+	}
+	return nil
 }

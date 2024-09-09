@@ -2,17 +2,18 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
-	"github.com/raphaelmb/go-in-memory-crud/internal/db"
+	"github.com/raphaelmb/go-in-memory-crud/internal/database"
 	"github.com/raphaelmb/go-in-memory-crud/types"
 	"github.com/raphaelmb/go-in-memory-crud/utils"
 )
 
-func NewHandler(db db.Database) http.Handler {
+func NewHandler(db database.Database) http.Handler {
 	r := chi.NewMux()
 
 	r.Use(middleware.Recoverer, middleware.Logger, middleware.RequestID)
@@ -28,23 +29,7 @@ func NewHandler(db db.Database) http.Handler {
 	return r
 }
 
-func handleFindAll(db db.Database) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		users := db.FindAllUsers()
-
-		usersDTO := toUserOutputDTOList(users)
-
-		data, err := json.Marshal(usersDTO)
-		if err != nil {
-			sendJSON(w, Response{Error: "something went wrong"}, http.StatusInternalServerError)
-			return
-		}
-
-		sendJSON(w, Response{Data: data}, http.StatusOK)
-	}
-}
-
-func handleInsert(db db.Database) http.HandlerFunc {
+func handleInsert(db database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body UserInputDTO
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -66,11 +51,15 @@ func handleInsert(db db.Database) http.HandlerFunc {
 
 		user, err := types.NewUser(id, body.FirstName, body.LastName, body.Biography)
 		if err != nil {
-			sendJSON(w, Response{Error: utils.CleanErrors(err.Error())}, http.StatusBadRequest)
+			sendJSON(w, Response{Error: utils.FormatErrors(err.Error())}, http.StatusBadRequest)
 			return
 		}
 
-		db.InsertUser(id, user)
+		user, err = db.InsertUser(id, user)
+		if err != nil {
+			sendJSON(w, Response{Error: "There was an error while saving the user to the database"}, http.StatusInternalServerError)
+			return
+		}
 
 		data := toUserOutputDTO(user)
 
@@ -79,7 +68,21 @@ func handleInsert(db db.Database) http.HandlerFunc {
 
 }
 
-func handleFindByID(db db.Database) http.HandlerFunc {
+func handleFindAll(db database.Database) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		users, err := db.FindAllUsers()
+		if err != nil {
+			sendJSON(w, Response{Error: "The users information could not be retrieved"}, http.StatusInternalServerError)
+			return
+		}
+
+		usersDTO := toUserOutputDTOList(users)
+
+		sendJSON(w, Response{Data: usersDTO}, http.StatusOK)
+	}
+}
+
+func handleFindByID(db database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := checkUUID(r, "id")
 		if err != nil {
@@ -89,7 +92,11 @@ func handleFindByID(db db.Database) http.HandlerFunc {
 
 		user, err := db.FindUserByID(id)
 		if err != nil {
-			sendJSON(w, Response{Error: err.Error()}, http.StatusNotFound)
+			if errors.Is(err, database.ErrUserIDNotExists) {
+				sendJSON(w, Response{Error: err.Error()}, http.StatusNotFound)
+				return
+			}
+			sendJSON(w, Response{Error: "The user information could not be retrieved"}, http.StatusInternalServerError)
 			return
 		}
 
@@ -99,7 +106,7 @@ func handleFindByID(db db.Database) http.HandlerFunc {
 	}
 }
 
-func handleDelete(db db.Database) http.HandlerFunc {
+func handleDelete(db database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := checkUUID(r, "id")
 		if err != nil {
@@ -109,13 +116,17 @@ func handleDelete(db db.Database) http.HandlerFunc {
 
 		err = db.DeleteUser(id)
 		if err != nil {
-			sendJSON(w, Response{Error: err.Error()}, http.StatusNotFound)
+			if errors.Is(err, database.ErrUserIDNotExists) {
+				sendJSON(w, Response{Error: err.Error()}, http.StatusNotFound)
+				return
+			}
+			sendJSON(w, Response{Error: "The user could not be removed"}, http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-func handleUpdate(db db.Database) http.HandlerFunc {
+func handleUpdate(db database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := checkUUID(r, "id")
 		if err != nil {
@@ -137,13 +148,17 @@ func handleUpdate(db db.Database) http.HandlerFunc {
 
 		user, err := types.NewUser(id, body.FirstName, body.LastName, body.Biography)
 		if err != nil {
-			sendJSON(w, Response{Error: utils.CleanErrors(err.Error())}, http.StatusBadRequest)
+			sendJSON(w, Response{Error: utils.FormatErrors(err.Error())}, http.StatusBadRequest)
 			return
 		}
 
-		err = db.UpdateUser(id, user)
+		user, err = db.UpdateUser(id, user)
 		if err != nil {
-			sendJSON(w, Response{Error: err.Error()}, http.StatusNotFound)
+			if errors.Is(err, database.ErrUserIDNotExists) {
+				sendJSON(w, Response{Error: err.Error()}, http.StatusNotFound)
+				return
+			}
+			sendJSON(w, Response{Error: "The user information could not be modified"}, http.StatusInternalServerError)
 			return
 		}
 
