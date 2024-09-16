@@ -68,7 +68,7 @@ func checkUUID(r *http.Request, id string) (uuid.UUID, error) {
 	idStr := chi.URLParam(r, id)
 	uid, err := uuid.Parse(idStr)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid UUID for parameter '%s': %s", id, idStr)
+		return uuid.Nil, fmt.Errorf("invalid UUID for id parameter")
 	}
 	return uid, nil
 }

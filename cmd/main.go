@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -27,6 +28,7 @@ func run() error {
 		WriteTimeout: 10 * time.Second,
 	}
 
+	fmt.Println("Server running on port 8080...")
 	if err := s.ListenAndServe(); err != nil {
 		return err
 	}

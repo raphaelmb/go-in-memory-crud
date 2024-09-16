@@ -24,7 +24,7 @@ func NewDB() Database {
 	}
 }
 
-func (d *Database) InsertUser(id uuid.UUID, user types.User) (types.User, error) {
+func (d *Database) Insert(id uuid.UUID, user types.User) (types.User, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -33,7 +33,7 @@ func (d *Database) InsertUser(id uuid.UUID, user types.User) (types.User, error)
 	return d.DB[id], nil
 }
 
-func (d *Database) FindAllUsers() ([]types.User, error) {
+func (d *Database) FindAll() ([]types.User, error) {
 	users := []types.User{}
 	for _, user := range d.DB {
 		users = append(users, user)
@@ -42,7 +42,7 @@ func (d *Database) FindAllUsers() ([]types.User, error) {
 	return users, nil
 }
 
-func (d *Database) FindUserByID(id uuid.UUID) (types.User, error) {
+func (d *Database) FindById(id uuid.UUID) (types.User, error) {
 	user, ok := d.DB[id]
 	if !ok {
 		return types.User{}, ErrUserIDNotExists
@@ -51,7 +51,7 @@ func (d *Database) FindUserByID(id uuid.UUID) (types.User, error) {
 	return user, nil
 }
 
-func (d *Database) DeleteUser(id uuid.UUID) error {
+func (d *Database) Delete(id uuid.UUID) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -64,7 +64,7 @@ func (d *Database) DeleteUser(id uuid.UUID) error {
 	return nil
 }
 
-func (d *Database) UpdateUser(id uuid.UUID, user types.User) (types.User, error) {
+func (d *Database) Update(id uuid.UUID, user types.User) (types.User, error) {
 	if _, ok := d.DB[id]; !ok {
 		return types.User{}, ErrUserIDNotExists
 	}

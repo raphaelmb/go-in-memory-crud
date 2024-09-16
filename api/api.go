@@ -55,7 +55,7 @@ func handleInsert(db database.Database) http.HandlerFunc {
 			return
 		}
 
-		user, err = db.InsertUser(id, user)
+		user, err = db.Insert(id, user)
 		if err != nil {
 			sendJSON(w, Response{Error: "There was an error while saving the user to the database"}, http.StatusInternalServerError)
 			return
@@ -70,7 +70,7 @@ func handleInsert(db database.Database) http.HandlerFunc {
 
 func handleFindAll(db database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		users, err := db.FindAllUsers()
+		users, err := db.FindAll()
 		if err != nil {
 			sendJSON(w, Response{Error: "The users information could not be retrieved"}, http.StatusInternalServerError)
 			return
@@ -90,7 +90,7 @@ func handleFindByID(db database.Database) http.HandlerFunc {
 			return
 		}
 
-		user, err := db.FindUserByID(id)
+		user, err := db.FindById(id)
 		if err != nil {
 			if errors.Is(err, database.ErrUserIDNotExists) {
 				sendJSON(w, Response{Error: err.Error()}, http.StatusNotFound)
@@ -114,7 +114,7 @@ func handleDelete(db database.Database) http.HandlerFunc {
 			return
 		}
 
-		err = db.DeleteUser(id)
+		err = db.Delete(id)
 		if err != nil {
 			if errors.Is(err, database.ErrUserIDNotExists) {
 				sendJSON(w, Response{Error: err.Error()}, http.StatusNotFound)
@@ -123,6 +123,8 @@ func handleDelete(db database.Database) http.HandlerFunc {
 			sendJSON(w, Response{Error: "The user could not be removed"}, http.StatusInternalServerError)
 			return
 		}
+
+		sendJSON(w, Response{}, http.StatusOK)
 	}
 }
 
@@ -152,7 +154,7 @@ func handleUpdate(db database.Database) http.HandlerFunc {
 			return
 		}
 
-		user, err = db.UpdateUser(id, user)
+		user, err = db.Update(id, user)
 		if err != nil {
 			if errors.Is(err, database.ErrUserIDNotExists) {
 				sendJSON(w, Response{Error: err.Error()}, http.StatusNotFound)
