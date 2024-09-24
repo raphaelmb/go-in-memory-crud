@@ -52,12 +52,12 @@ func (d *Database) FindById(id uuid.UUID) (types.User, error) {
 }
 
 func (d *Database) Delete(id uuid.UUID) error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
 	if _, ok := d.DB[id]; !ok {
 		return ErrUserIDNotExists
 	}
+
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
 	delete(d.DB, id)
 

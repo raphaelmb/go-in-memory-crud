@@ -124,7 +124,7 @@ func handleDelete(db database.Database) http.HandlerFunc {
 			return
 		}
 
-		sendJSON(w, Response{}, http.StatusOK)
+		sendJSON(w, Response{}, http.StatusNoContent)
 	}
 }
 

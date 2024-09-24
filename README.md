@@ -28,7 +28,7 @@ Exemplo de payload:
 POST `http://localhost:8080/api/users`
 
 ```bash
-curl -v -X \
+curl  -X \
 -d '{"first_name": "hello", "last_name": "world", "biography": "this is a hello world biography"}' \
 http://localhost:8080/api/users
 ```
@@ -38,7 +38,7 @@ http://localhost:8080/api/users
 GET `http://localhost:8080/api/users`
 
 ```bash
-curl -v http://localhost:8080/api/users
+curl  http://localhost:8080/api/users
 ```
 
 ### Listagem de usuário específico
@@ -46,7 +46,7 @@ curl -v http://localhost:8080/api/users
 GET `http://localhost:8080/api/users/id`
 
 ```bash
-curl -v http://localhost:8080/api/users/id
+curl  http://localhost:8080/api/users/id
 ```
 
 ### Atualização de usuário específico
@@ -54,7 +54,7 @@ curl -v http://localhost:8080/api/users/id
 PUT `http://localhost:8080/api/users/id`
 
 ```bash
-curl -v -X PUT \
+curl -X PUT \
 -d '{"first_name": "updated", "last_name": "record", "biography": "new biography for the updated record"}' \
 http://localhost:8080/api/users/id
 ```
@@ -64,5 +64,5 @@ http://localhost:8080/api/users/id
 DELETE `http://localhost:8080/api/users/id`
 
 ```bash
-curl -v -X DELETE http://localhost:8080/api/users/id
+curl -X DELETE http://localhost:8080/api/users/id
 ```
